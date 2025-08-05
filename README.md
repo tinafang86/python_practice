@@ -9,20 +9,32 @@ sales_data = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Da
 sales_data
 ```
 
-
 ## 二、以下爲常用解析資料，初步了解表格資訊
 
 ```
-sales_data.size # 共有2286個項目
-sales_data.values # 打印出所有的值
-sales_data.index # 索引值 # RangeIndex(start=0, stop=254, step=1) 有253列
-sales_data.shape # (行,列) # (254, 9)
-sales_data.dtypes # 各欄內值的type
-sales_data.head() # 預設前五
-sales_data.tail() # 預設後五
-250 in sales_data.index #250為表格中其中一個index # True
-"Product" in sales_data #Product是否為其中一個欄位名稱 #True
-"Beverages" in sales_data.values #Beverages是否為其中一個值 #True
+sales_data.size  # 共有2286個項目，只會考慮列數*欄數，不考慮遺漏值(NaN)
+sales_data.count() #回傳非空值 (non-null)
+
+Order ID          254
+Date              254
+Product           254
+Price             254
+Quantity          254
+Purchase Type     254
+Payment Method    254
+Manager           254
+City              254
+dtype: int64
+
+sales_data.values  # 打印出所有的值
+sales_data.index  # 索引值 # RangeIndex(start=0, stop=254, step=1) 有253列
+sales_data.shape  # (行,列) # (254, 9)
+sales_data.dtypes  # 各欄內值的type
+sales_data.head()  # 預設前五
+sales_data.tail()  # 預設後五
+250 in sales_data.index  # 250為表格中其中一個index
+"Product" in sales_data  # True
+"Beverages" in sales_data.values
 
 ```
 
@@ -36,6 +48,8 @@ datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-An
 datas
 ```
 ![01](/Users/tinafung8686/Desktop/python_sales-data/image/01)
+
+***
 
 - 我只看Product、Payment Method欄位，透過column index取得
 ```
@@ -67,6 +81,8 @@ data_restored = datas[["Payment Method", "Product"]]
 pd.DataFrame(datas, columns=["Payment Method", "Product"])
 ```
 
+***
+
 ### view
 #### 方法一：直接針對原始資料新增一個新欄位
 ```
@@ -81,6 +97,8 @@ sales_data["grade"] = [100,100,100,100] ＃ 新增一個grade欄位
 
 - .loc:基於標籤 (label) 進行索引和修改。
 
+df.loc[列的值, 欄的值]
+
 ```
 import pandas as pd
 df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['x', 'y', 'z'])
@@ -94,11 +112,61 @@ x  1   4
 y  2  99
 z  3   6
 
+```
+import pandas as pd
+
+# 創建一個 DataFrame 來記錄學生成績
+grades_data = {
+    '國文': [85, 92, 78],
+    '數學': [90, 88, 95],
+    '英文': [75, 80, 82]
+}
+students = ['小明', '小華', '小強']
+grades_df = pd.DataFrame(grades_data, index=students)
+print(grades_df)
+
+```
+   國文  數學  英文
+小明  85  90  75
+小華  92  88  80
+小強  78  95  82
+
+# 使用 .loc 選取 '小華' 到 '小強' (包含) 的列，和 '國文' 到 '英文' (包含) 的欄
+
+```
+subset_loc = grades_df.loc['小華':'小強', '國文':'英文']
+print(subset_loc)
+
+```
+
+    國文  英文
+小華  92  80
+小強  78  82
+
+
 - .iloc:基於位置 (position) 進行索引和修改。
 
 ```
+grades_data = {
+    '國文': [85, 92, 78],
+    '數學': [90, 88, 95],
+    '英文': [75, 80, 82]
+}
+students = ['小明', '小華', '小強']
+grades_df = pd.DataFrame(grades_data, index=students)
+print(grades_df)
+```
+
+   國文  數學  英文
+小明  85  90  75
+小華  92  88  80
+小強  78  95  82
 
 ```
+score_iloc = grades_df.iloc[1, 1]
+print(f"\n小華的數學成績 (iloc)：{score_iloc}")
+```
+小華的數學成績 (iloc)：88
 
 ## 六、整理資料
 
@@ -168,11 +236,84 @@ B	6	3
 ### 取得特定資料的值
 
 #### Series取值
-- .get()
+- .get_group()
+```
+# 將原始資料轉為Series，Product為索引index，Price為欄
+data01 = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product", "Price"], index_col=["Product"])
+# 發現index重複度很高，用groupby()將一樣的值合併，但需要注意groupby()是分組操作不會直接顯示成果
+onlydata = data01.groupby(by = "Product")
+# <pandas.core.groupby.generic.DataFrameGroupBy object at 0x1269b6c60>
+
+# 透過mean()先看一下分組狀況，得知欄位包含Beverages、Burgers、Chicken Sandwiches、Fries、Sides & Other 
+print(onlydata.mean())
+
+#                         Price
+# Product                      
+# Beverages            2.950000
+# Burgers             12.990000
+# Chicken Sandwiches  10.317308
+# Fries                3.921569
+# Sides & Other        4.990000
+
+
+# 透過get_group找出burger的價錢
+burgerdata = onlydata.get_group("Burgers")
+burgerdata
+
+	      Price
+Product	
+Burgers	12.99
+Burgers	12.99
+Burgers	12.99
+Burgers	12.99
+Burgers	12.99
+Burgers	12.99
+Burgers	12.99
+Burgers	12.99
+Burgers	12.99
+Burgers	12.99
+Burgers	12.99
+
+```
 - .loc()
-- my_series[0]
+```
+data01 = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product", "Price"], index_col=["Product"])
+# 發現index重複度很高，用groupby()將一樣的值合併，但需要注意groupby()是分組操作不會直接顯示成果
+onlydata = data01.groupby(by = "Product")
+
+# groupby不可以使用loc
+average_data = onlydata.mean()
+burgerdata = average_data.loc["Burgers", "Price"] # loc["第一個索引值，取索引標籤"，"第二個索引值，取欄位"]
+# np.float64(12.99)
+
+```
 
 #### DataFrame取值
 - df[value1]
 - df.loc[列的標籤, 欄的標籤] (推薦)
+
+### 計算每一列個數
+
+```
+datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv",
+                    usecols=["Product"])
+
+datas.value_counts()
+```
+
+                   Product           
+Burgers               52
+Chicken Sandwiches    52
+Fries                 51
+Beverages             50
+Sides & Other         49
+Name: count, dtype: int64
+
+### 計算每一列個數並換算為比例
+
+```
+
+```
 
