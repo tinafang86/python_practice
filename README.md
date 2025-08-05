@@ -131,10 +131,48 @@ sales_data = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
 sales_data.sort_values(by = ["Price","Quantity"]) # 根據Price由小到大，Quantity也由小到大
 
-sales_data.sort_values(by = ["Price","Quantity"], ascending=[False, True]) # 價錢由小到大
+sales_data.sort_values(by = ["Price","Quantity"], ascending=[False, True]) # 價錢由大到小，Quantity由小到大
 
 ```
+#### sort_index(ascending = True) (由小到大)
 
+```
+import pandas as pd
+df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['C', 'A', 'B'])
+   A  B
+C  1  4
+A  2  5
+B  3  6
 
+df_sorted = df.sort_index(axis = 0) # ascending預設為True，由小到大
 
+  A	B
+A	2	5
+B	3	6
+C	1	4
+
+df_sorted = df.sort_index(axis = 0, ascending = False) # axis = 0針對列索引值排序，axis = 1針對欄索引值排序
+
+  A	B
+C	1	4
+B	3	6
+A	2	5
+
+df_sorted = df.sort_index(axis = 1, ascending = False) # 操作欄，由大到小排序
+
+  B	A
+C	4	1
+A	5	2
+B	6	3
+```
+### 取得特定資料的值
+
+#### Series取值
+- .get()
+- .loc()
+- my_series[0]
+
+#### DataFrame取值
+- df[value1]
+- df.loc[列的標籤, 欄的標籤] (推薦)
 
