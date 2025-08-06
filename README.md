@@ -3,15 +3,12 @@
 
 ## 資料清理順序
 
-
-
-
 ## 一、匯入資料 
 
 ```
 import pandas as pd
 sales_data = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
-sales_data
+print(sales_data)
 ```
 
 ## 二、創建資料
