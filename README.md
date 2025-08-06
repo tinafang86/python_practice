@@ -731,6 +731,18 @@ new_data.first() #查看每一個groupby的第一個結果, 同理查看最後�
 ```
 ![09](/Users/tinafung8686/Desktop/python_sales-data/image/09)
 
+### multiindex
+
+- parse_dates["Date"]：主要在告訴pandas讀取檔案時將欄位"Date"視為日期資料處理
+- date_format：指定"Date"欄位的格式
+- index_col = ["col1", "col2"] ：複合index的精髓
+
+```
+import pandas as pd
+bigmac = pd.read_csv("bigmac.csv", parse_dates=["Date"], date_format="%Y-%m-%d", index_col=["Date", "Country"]).sort_index()
+bigmac.set_index(keys = ["Date", "Country"])
+```
+
 
 ## 八、資料運算、比較
 
