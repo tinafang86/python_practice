@@ -117,7 +117,7 @@ sales_data.describe
 ```
 - sales_data.info 查看Dtype, memory狀況等等。尤其要注意日期是否為datetime格式
 
-![06](/Users/tinafung8686/Desktop/python_sales-data/image/06)
+<img src="/images/06.png" width="50%">
 
 - sales_date.to_date()
 **to_date是一種讀取的格式，不能協助變更type。因此format=xxx必須跟著原始raw data的形式，但若要改變呈現方式可以使用df.strftime()->字串string的格式化時間**
@@ -129,7 +129,7 @@ sales_data = pd.read_csv(
 sales_data["Date"] = pd.to_datetime(sales_data["Date"], format="%d-%m-%Y")
 sales_data.info()
 ```
-![07](/Users/tinafung8686/Desktop/python_sales-data/image/07)
+<img src="/images/07.png" width="50%">
 
 一氣呵成的變換完格式。parse_date()在找遍哪一欄，date_format()則再決定變更格式
 
@@ -150,7 +150,7 @@ import pandas as pd
 datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product","Payment Method"])
 datas
 ```
-![01](/Users/tinafung8686/Desktop/python_sales-data/image/01)
+<img src="/images/01.png" width="50%">
 
 ***
 
@@ -163,7 +163,7 @@ datas
 ## 五、Series被squeeze為純量（無維度）
 ```datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product"]).squeeze("columns")
 ```
-![02](/Users/tinafung8686/Desktop/python_sales-data/image/02)
+<img src="/images/02.png" width="50%">
 
 ## 六、調整欄位順序
 
@@ -291,7 +291,7 @@ sales_data["Product"].str.replace("Beverages", "drinks") #將Beverages全部改�
 ```
 sales_data[sales_data["Payment Method"].str.contains("Gift")].head()
 ```
-![08](/Users/tinafung8686/Desktop/python_sales-data/image/08)
+<img src="/images/08.png" width="50%">
 
 ```
 sales_data[sales_data["Manager"].str.lower().str.startswith("tom")].head()
@@ -726,7 +726,7 @@ dtype: int64
 new_data.first() #查看每一個groupby的第一個結果, 同理查看最後一個結果.last()
 
 ```
-![09](/Users/tinafung8686/Desktop/python_sales-data/image/09)
+<img src="/images/09.png" width="50%">
 
 ### 關於index
 
@@ -965,7 +965,7 @@ Name: Product, Length: 254, dtype: bool
 # 印出所有重複的值，所以可以看到表格從index 5開始
 sales_data[sales_data["Product"].duplicated()]
 ```
-![04](/Users/tinafung8686/Desktop/python_sales-data/image/04)
+<img src="/images/04.png" width="50%">
 
 - df.duplicated(keep = "first"):預設。首次出現的值會被記錄為True，重複值為False
 - df.duplicated(keep = "last"):預設。尾末出現第一次的值會被記錄為True，重複值為False
@@ -976,7 +976,7 @@ sales_data[sales_data["Product"].duplicated()]因為這邊會印出所有重複�
 sales_data[~sales_data["Product"].duplicated(keep="first")]
 
 ```
-![05](/Users/tinafung8686/Desktop/python_sales-data/image/05)
+<img src="/images/05.png" width="50%">
 
 ### 5.去除重複值 df.drop_duplicated()
 
