@@ -118,13 +118,30 @@ sales_data.describe
 "Product" in sales_data  # True
 "Beverages" in sales_data.values
 ```
-- sales_data.info 查看Dtype, memory狀況
+- sales_data.info 查看Dtype, memory狀況等等。尤其要注意日期是否為datetime格式
 
 ![06](/Users/tinafung8686/Desktop/python_sales-data/image/06)
 
+- sales_date.to_date()
+**to_date是一種讀取的格式，不能協助變更type。因此format=xxx必須跟著原始raw data的形式，但若要改變呈現方式可以使用df.strftime()->字串string的格式化時間**
+
 ```
-memory usage = 33.2+ KB
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
+sales_data["Date"] = pd.to_datetime(sales_data["Date"], format="%d-%m-%Y")
+sales_data.info()
 ```
+![07](/Users/tinafung8686/Desktop/python_sales-data/image/07)
+
+一氣呵成的變換完格式。parse_date()在找遍哪一欄，date_format()則再決定變更格式
+
+```
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", parse_dates=["Date"], date_format = "%d-%m-%Y" )
+```
+
 - sales_data.unique() 查看個欄位不重複的值
 
 ## 四、專注處理單一或少數欄位
@@ -531,6 +548,29 @@ sales_data.sum(axis = 1)
 253    680.92
 Length: 254, dtype: float64
 
+#### 處理時間
+
+- 匯入時間模組
+
+```
+import datetime as dt
+```
+
+- date():只處理年/月/日
+- time():只處理時/分/秒/微秒
+- datetime(): date和time的結合，包含時區(tzinfo)
+- timedelta():時間差
+
+```
+import datetime as dt
+current_time = dt.datetime.now()
+two_hours_later = current_time + dt.timedelta(hours=2)
+print(f"現在加 2 小時: {two_hours_later}")
+
+# 現在加 2 小時: 2025-08-06 16:20:09.147360
+```
+
+
 ## 八、資料運算、比較
 
 ### 1.map()將同樣規則套用在某變數上面。概念為copy而非view
@@ -577,6 +617,8 @@ data = {
 sales_data = pd.DataFrame(data)
 print(sales_data)
 ```
+***
+
 #### 定義一個我感興趣的清單，並檢查這份清單是否在Product裡面可以找到->isin()
 
 ```
@@ -590,9 +632,8 @@ print(is_in_list) #回傳一個boolean
 3     True
 4    False
 Name: Product, dtype: bool
-```
-#### 使用布林值進行篩選
-```
+
+# 使用布林值進行篩選
 filtered_sales = sales_data[is_in_list]
 print(filtered_sales)
 
@@ -601,6 +642,61 @@ print(filtered_sales)
 2      Fries         6     30
 3  Beverages         8     20
 ```
+
+#### 根據情境篩選
+
+- 找出string
+
+```
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", parse_dates=["Date"], date_format = "%d-%m-%Y" )
+sales_data
+
+# 篩出商品為Fries的所有資料
+sales_data["Product"] == "Fries" # 出現一列boolean
+sales_data[sales_data["Product"] == "Fries" ]
+```
+
+- 找出datetime，發現datetime可以像是stirng一樣比大小
+
+```
+# 找出所有小於2022/11/15的資料，根據日期欄位由大排到小
+sales_data[sales_data["Date"] <= "2022-11-15"].sort_values("Date", ascending=False)
+```
+- 但若是遇到時間格式為小時, 分, 秒，則需另外處理。dt.time()為24小時制
+```
+sales_data[sales_data["Time"] <= dt.time(12,0,0)].sort_values("Time")
+```
+#### 根據特定條件篩選
+
+- 條件都要滿足：AND
+```
+import datetime as dt
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", parse_dates=["Date"], date_format = "%d-%m-%Y" )
+product_is_fries = sales_data["Product"] == "Fries"
+city_is_london = sales_data["City"] == "London"
+sales_data[product_is_fries & city_is_london].head()
+```
+- 條件滿足一個即可：OR
+- 滿足2個或第三個：AND + OR
+
+**篩出產品為薯條且地區為倫敦者，或者日期> 12/25**
+
+```
+import datetime as dt
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", parse_dates=["Date"], date_format = "%d-%m-%Y" )
+product_is_fries = sales_data["Product"] == "Fries"
+city_is_london = sales_data["City"] == "London"
+date_after_1225 = sales_data["Date"] > "2022-12-25"
+sales_data[(product_is_fries & city_is_london) |date_after_1225 ].tail()
+```
+
+
 ### 3.查詢數值區間
 
 - df[”欄位名稱”].between(startpoint, endpoint)
