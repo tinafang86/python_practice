@@ -278,6 +278,94 @@ print(f"\n小華的數學成績 (iloc)：{score_iloc}")
 
 ## 七、整理資料
 
+### 處理文字數據
+
+```
+sales_data["Product"].str.lower() #全小寫
+sales_data["Product"].str.upper() #全大寫
+sales_data["Product"].str.title() #首字大寫，其徐小寫
+sales_data["Product"].str.len()
+sales_data["Product"].str.strip() # 移除空白
+sales_data["Product"].str.lstrip() #移除開頭空白
+sales_data["Product"].str.rstrip() #移除結尾空白
+sales_data["Product"].str.replace("Beverages", "drinks") #將Beverages全部改為drinks
+```
+
+```
+sales_data[sales_data["Payment Method"].str.contains("Gift")].head()
+```
+![08](/Users/tinafung8686/Desktop/python_sales-data/image/08)
+
+```
+sales_data[sales_data["Manager"].str.lower().str.startswith("tom")].head()
+```
+
+```
+import datetime as dt
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", index_col=["Order ID"])
+sales_data.columns = sales_data.columns.str.lower()
+print(sales_data)
+```
+
+### 處理文字數據 - get
+
+```
+import datetime as dt
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
+sales_data["Manager"].str.split().str.get(0).value_counts() #get=0代表第一個元素，get=1代表第二個元素
+
+Manager
+Tom       75
+Joao      75
+Pablo     46
+Walter    30
+Remy      28
+Name: count, dtype: int64
+```
+
+### 處理文字數據 - split(expand = True/False)
+```
+import datetime as dt
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
+sales_data["Manager"].str.split(expand=False)
+
+0        [Tom, Jackson]
+1        [Pablo, Perez]
+2         [Joao, Silva]
+3      [Walter, Muller]
+4      [Walter, Muller]
+             ...       
+249    [Walter, Muller]
+250    [Walter, Muller]
+251    [Walter, Muller]
+252    [Walter, Muller]
+253    [Walter, Muller]
+Name: Manager, Length: 254, dtype: object
+
+ 
+sales_data["Manager"].str.split(expand=True, n = 1)
+# 根據一個空個分裂
+
+	0	1
+0	Tom	Jackson
+1	Pablo	Perez
+2	Joao	Silva
+3	Walter	Muller
+4	Walter	Muller
+...	...	...
+249	Walter	Muller
+250	Walter	Muller
+251	Walter	Muller
+252	Walter	Muller
+```
+
+
 ### 處理遺漏值I
 
 #### dropna():刪除遺漏值
@@ -569,6 +657,79 @@ print(f"現在加 2 小時: {two_hours_later}")
 
 # 現在加 2 小時: 2025-08-06 16:20:09.147360
 ```
+### groupby():相當於Excel的樞紐
+
+- groupby是一個分組計劃，不是分組結果的展現。例如出現：<pandas.core.groupby.generic.DataFrameGroupBy object at 0x110f735c0>
+- 核心三觀念：分(DataFrame拆成獨立的分組)、應(做四則運算)、結(呈現結過，形成一個新的DataFrame)
+- 範例一
+```
+import pandas as pd
+
+sales_data = pd.DataFrame({
+    '團隊': ['A隊', 'B隊', 'A隊', 'B隊', 'C隊', 'A隊'],
+    '銷售額': [100, 150, 120, 180, 90, 110],
+    '年齡': [25, 30, 28, 35, 22, 26]
+})
+
+   團隊  銷售額  年齡
+0  A隊  100  25
+1  B隊  150  30
+2  A隊  120  28
+3  B隊  180  35
+4  C隊   90  22
+5  A隊  110  26
+
+print(sales_data)
+# 使用 groupby()，將相同團隊合併並算出分組後的年齡平均值
+team_avg_sales = sales_data.groupby('團隊').mean()
+print(team_avg_sales)
+
+      銷售額   年齡
+團隊                  
+A隊  110.0  26.333333
+B隊  165.0  32.500000
+C隊   90.0  22.000000
+
+```
+- 範例二
+
+```
+import datetime as dt
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
+# 先查看壹下不重複值的狀況，方便我決定誰要當作groupby的項
+# Product, City都很適合
+sales_data.nunique()
+//
+Order ID          254
+Date               53
+Product             5
+Price               7
+Quantity           29
+Purchase Type       3
+Payment Method      3
+Manager            14
+City                5
+dtype: int64
+//
+
+new_data = sales_data.groupby("Purchase Type")
+print(new_data) # <pandas.core.groupby.generic.DataFrameGroupBy object at 0x12b0d04a0>
+
+#查詢三種Purchase Type的第一項
+new_data.size()
+//
+Purchase Type
+Drive-thru      61
+In-store        86
+Online         107
+dtype: int64
+//
+new_data.first() #查看每一個groupby的第一個結果, 同理查看最後一個結果.last()
+
+```
+![09](/Users/tinafung8686/Desktop/python_sales-data/image/09)
 
 
 ## 八、資料運算、比較
