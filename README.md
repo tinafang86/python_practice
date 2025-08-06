@@ -1,6 +1,11 @@
 # Python_practice
 ## 這份專案練習以Kaggle中的[銷售資料](https://www.kaggle.com/datasets/rohitgrewal/restaurant-sales-data)為例作為資料庫操作練習
 
+## 資料清理順序
+
+
+
+
 ## 一、匯入資料 
 
 ```
@@ -9,11 +14,77 @@ sales_data = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Da
 sales_data
 ```
 
-## 二、以下爲常用解析資料，初步了解表格資訊
+## 二、創建資料
+
+### pd.DataFrame():最基本的創建一個DataFrame物件，可以把它想像為一個Excel表格，有以下幾種常見用法
+
+- 字典 Dicitionary:key為欄位名稱，value為欄位資料
+```
+import pandas as pd
+data = {
+    '姓名': ['張三', '李四', '王五'],
+    '年齡': [25, 30, 35],
+    '城市': ['台北', '高雄', '台中']
+}
+df = pd.DataFrame(data)
+print(df)
+```
+結果
+```
+姓名  年齡  城市
+0  張三  25  台北
+1  李四  30  高雄
+2  王五  35  台中
+```
+***
+
+- 列表List裡的字典
+```
+import pandas as pd
+data = [
+    {'姓名': '張三', '年齡': 25, '城市': '台北'},
+    {'姓名': '李四', '年齡': 30, '城市': '高雄'},
+    {'姓名': '王五', '年齡': 35, '城市': '台中'}
+]
+df = pd.DataFrame(data)
+print(df)
+```
+結果
 
 ```
-sales_data.size  # 共有2286個項目，只會考慮列數*欄數，不考慮遺漏值(NaN)
-sales_data.count() #回傳非空值 (non-null)
+   姓名  年齡  城市
+0  張三  25  台北
+1  李四  30  高雄
+2  王五  35  台中
+```
+  
+- 使用二維列表 List of List **較難**
+
+```
+import pandas as pd
+data = [
+    ['張三', 25, '台北'],
+    ['李四', 30, '高雄'],
+    ['王五', 35, '台中']
+]
+# 使用 columns 參數來指定欄位名稱
+columns = ['姓名', '年齡', '城市']
+df = pd.DataFrame(data, columns=columns)
+print(df)
+```
+結果
+
+```
+   姓名  年齡  城市
+0  張三  25  台北
+1  李四  30  高雄
+2  王五  35  台中
+```
+
+## 三、以下爲常用解析資料，初步了解表格資訊
+
+- sales_data.size  # 共有2286個項目，只會考慮列數*欄數，不考慮遺漏值(NaN)
+- sales_data.count() #回傳非空值 (non-null)
 
 Order ID          254
 Date              254
@@ -26,26 +97,37 @@ Manager           254
 City              254
 dtype: int64
 
-sales_data.values  # 打印出所有的值
-sales_data.index  # 索引值 # RangeIndex(start=0, stop=254, step=1) 有253列
-sales_data.shape  # (行,列) # (254, 9) 25列9欄
-sales_data.columns #回傳每一欄的值
-
+- sales_data.values  打印出所有的值
+- sales_data.index  索引值 # RangeIndex(start=0, stop=254, step=1) 有253列
+- sales_data.shape  (行,列) # (254, 9) 25列9欄
+- sales_data.columns 回傳每一欄的值
+```
 Index(['Order ID', 'Date', 'Product', 'Price', 'Quantity', 'Purchase Type',
        'Payment Method', 'Manager', 'City'],
       dtype='object')
 sales_data.describe
+```
+
 ![03](/Users/tinafung8686/Desktop/python_sales-data/image/03)
-sales_data.dtypes  # 各欄內值的type
-sales_data.head()  # 預設前五
-sales_data.tail()  # 預設後五
+
+- sales_data.dtypes  各欄內值的type
+- sales_data.head()  預設前五
+- sales_data.tail()  預設後五
+```
 250 in sales_data.index  # 250為表格中其中一個index
 "Product" in sales_data  # True
 "Beverages" in sales_data.values
+```
+- sales_data.info 查看Dtype, memory狀況
+
+![06](/Users/tinafung8686/Desktop/python_sales-data/image/06)
 
 ```
+memory usage = 33.2+ KB
+```
+- sales_data.unique() 查看個欄位不重複的值
 
-## 三、專注處理單一或少數欄位
+## 四、專注處理單一或少數欄位
 
 - 我只看Product、Payment Method欄位，透過column name取得
 
@@ -64,12 +146,12 @@ datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-An
 datas
 ```
 
-## 四、Series被squeeze為純量（無維度）
+## 五、Series被squeeze為純量（無維度）
 ```datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product"]).squeeze("columns")
 ```
 ![02](/Users/tinafung8686/Desktop/python_sales-data/image/02)
 
-## 五、調整欄位順序
+## 六、調整欄位順序
 
 ### 牽涉copy（複製） and view（視圖）概念
 ### copy
@@ -140,7 +222,7 @@ print(grades_df)
 
 ```
 
-# 使用 .loc 選取 '小華' 到 '小強' (包含) 的列，和 '國文' 到 '英文' (包含) 的欄
+### 使用 .loc 選取 '小華' 到 '小強' (包含) 的列，和 '國文' 到 '英文' (包含) 的欄
 
 ```
 subset_loc = grades_df.loc['小華':'小強', '國文':'英文']
@@ -177,9 +259,11 @@ print(f"\n小華的數學成績 (iloc)：{score_iloc}")
 ```
 小華的數學成績 (iloc)：88
 
-## 六、整理資料
+## 七、整理資料
 
 ### 處理遺漏值I
+
+#### dropna():刪除遺漏值
 - dropna(how = "all")：如果整欄或整列都為遺漏值NaN，就刪去他
 - dropna(how = "any")：如果整欄或整列有一個遺漏值NaN，就刪去他
 
@@ -192,9 +276,9 @@ sales_data = pd.read_csv(
 sales_data.size
 ```
 
+#### fillna():填補遺漏值
 - fillna(0)：前面常見使用dropna(how = "all")刪除整列0的數據，但那些少數NaN (Not a Number)在表格裡，此時指定他為0
-- NaN就算指定為0，在資料型態中仍然算是float，因此建議搭配：
-- astype():()裡面可以放float, int, ...
+- NaN就算指定為0，在資料型態中仍然算是float，因此建議搭配 astype():()裡面可以放float, int, ...
 
 ```
 import pandas as pd
@@ -203,6 +287,14 @@ sales_data = pd.read_csv(
 sales_data = sales_data.fillna(0).astype(int)
 ```
 ***
+
+#### billna():由遺漏值下一位數字填補
+
+- 時間序列資料：例如預測接下來股市資料，可以用後面的數字補值會更準
+- 資料延遲：股市交易時因為資料太大來不及運算，會先用NaN補空值，bfill()則可以取一個較能反應最終資料的數值。
+- 與ffill為互補關係。例如最開頭的NaN
+***
+
 ### 處理遺漏值II
 - df.isnull():找出空缺值。若值為NaN則為True，否則為False
 - df.notnull()：找出非空缺值。若值為非空缺值則為True，否則為False
@@ -241,6 +333,13 @@ exist_value = sales_data["Order ID"].notnull() # 找出非空缺值
 ```
 ***
 
+### 處理特定資料的遺漏值：subset["",""]子集功能
+- 請在 sales_data 中，只檢查 Order ID 這一個欄位。如果某列的 Order ID 欄位是空的（NaN），那麼就將整列資料都移除。
+```
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv").dropna(how="all", subset = ["Order ID"])
+```
+***
 ### 排序數字
 #### sort_values(ascending = True) (由小到大)
 - Series的sort_values()
@@ -304,7 +403,6 @@ C	4	1
 A	5	2
 B	6	3
 ```
-### 取得特定資料的值
 
 #### Series取值
 - .get_group()
@@ -433,7 +531,7 @@ sales_data.sum(axis = 1)
 253    680.92
 Length: 254, dtype: float64
 
-## 七、資料運算、比較
+## 八、資料運算、比較
 
 ### 1.map()將同樣規則套用在某變數上面。概念為copy而非view
 
@@ -507,11 +605,191 @@ print(filtered_sales)
 
 - df[”欄位名稱”].between(startpoint, endpoint)
 
-```
-# 查詢ID 10452 訂單時間是否介於2022/7/1-2022/7/31
-
+#### 查詢ID 10452 訂單時間是否介於2022/7/1-2022/7/31
 
 ```
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
+# 查詢ID 10452 訂單時間是否介於2022/11/1-2022/11/31
+
+# 原地覆蓋值。Date更改格式為datetime, 並改變年月日顯示規則
+sales_data["Date"] = pd.to_datetime(sales_data["Date"], format=('%d-%m-%Y'))
+
+
+id = 10452 #int為10452時會是True, string為"10452"時為False
+start_time = pd.to_datetime('01-11-2022')
+end_time = pd.to_datetime('30-11-2022')
+
+# 用來篩選布林值
+is_match = (sales_data['Order ID'] == id) & (sales_data['Date'].between(start_time, end_time))
+print(is_match)
+
+0       True
+1      False
+2      False
+3      False
+4      False
+       ...  
+249    False
+250    False
+251    False
+252    False
+253    False
+
+# 根據布林值 Series 篩選 DataFrame中實際的欄位
+query_result = sales_data[is_match]
+print(query_result)
+
+Order ID	Date	Product	Price	Quantity	Purchase Type	Payment Method	Manager	City
+0	10452	2022-11-07	Fries	3.49	573.07	Online	Gift Card	Tom Jackson	London
+
+```
+
+### 4.查詢重複值 df.duplicated()
+
+- df.duplicated()：所有重複值都會被記錄為"True"，不重複值為"False"
+
+```
+import pandas as pd
+sales_data = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
+sales_data
+
+sales_data["Product"].duplicated()
+
+```
+
+0      False
+1      False
+2      False
+3      False
+4      False
+       ...  
+249     True
+250     True
+251     True
+252     True
+253     True
+Name: Product, Length: 254, dtype: bool
+
+```
+# 印出所有重複的值，所以可以看到表格從index 5開始
+sales_data[sales_data["Product"].duplicated()]
+```
+![04](/Users/tinafung8686/Desktop/python_sales-data/image/04)
+
+- df.duplicated(keep = "first"):預設。首次出現的值會被記錄為True，重複值為False
+- df.duplicated(keep = "last"):預設。尾末出現第一次的值會被記錄為True，重複值為False
+- ~反轉布林值：篩出第一次出現的值
+sales_data[sales_data["Product"].duplicated()]因為這邊會印出所有重複值，反轉換就會出現第一次的不重複值
+
+```
+sales_data[~sales_data["Product"].duplicated(keep="first")]
+
+```
+![05](/Users/tinafung8686/Desktop/python_sales-data/image/05)
+
+### 5.去除重複值 df.drop_duplicated()
+
+- drop_duplicated()是用來刪除整列一樣的重複列
+- drop_duplicated(keep = "first")
+- drop_duplicated(keep = "last")
+
+```
+import pandas as pd
+df = pd.DataFrame({
+    'ID': [1, 2, 2, 3, 3],
+    'Product': ['A', 'B', 'B', 'C', 'C'],
+    'Price': [100, 200, 200, 300, 350]
+})
+print(df)
+unique_df = df.drop_duplicates()
+print(unique_df)
+```
+
+```
+原始 DataFrame：
+   ID Product  Price
+0   1       A    100
+1   2       B    200
+2   2       B    200  # 這筆資料與索引 1 完全相同
+3   3       C    300
+4   3       C    350
+------------------------------
+預設移除重複後：
+   ID Product  Price
+0   1       A    100
+1   2       B    200
+3   3       C    300
+4   3       C    350
+```
+
+- 同時篩選多個條件
+
+```
+import pandas as pd
+employees = pd.DataFrame({
+    '姓名': ['張三', '李四', '王五', '趙六', '陳七'],
+    'Senior Management': [True, False, False, True, False],
+    'Team': ['工程', '行銷', '行銷', '工程', '行銷']
+})
+print(employees)
+
+原始員工資料：
+    姓名  Senior Management  Team
+0   張三               True  工程
+1   李四              False  行銷
+2   王五              False  行銷
+3   趙六               True  工程
+4   陳七              False  行銷
+
+```
+情況一：只根據 'Senior Management' 篩選不重複
+```
+df1 = employees.drop_duplicates(subset=["Senior Management"])
+print(df1)
+
+    姓名  Senior Management  Team
+0   張三               True  工程
+1   李四              False  行銷
+```
+***
+
+情況二：根據 'Senior Management' 和 'Team' 篩選不重複 (多考慮了"Team")
+
+```
+df2 = employees.drop_duplicates(subset=["Senior Management", "Team"])
+print(df2)
+
+    姓名  Senior Management  Team
+0   張三               True  工程
+1   李四              False  行銷
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
