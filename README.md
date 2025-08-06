@@ -105,7 +105,7 @@ Index(['Order ID', 'Date', 'Product', 'Price', 'Quantity', 'Purchase Type',
 sales_data.describe
 ```
 
-![03](/Users/tinafung8686/Desktop/python_sales-data/image/03)
+![03](/images/03.png)
 
 - sales_data.dtypes  各欄內值的type
 - sales_data.head()  預設前五
