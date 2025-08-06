@@ -731,16 +731,39 @@ new_data.first() #查看每一個groupby的第一個結果, 同理查看最後�
 ```
 ![09](/Users/tinafung8686/Desktop/python_sales-data/image/09)
 
-### multiindex
+### 關於index
+
+#### multiindex
 
 - parse_dates["Date"]：主要在告訴pandas讀取檔案時將欄位"Date"視為日期資料處理
 - date_format：指定"Date"欄位的格式
 - index_col = ["col1", "col2"] ：複合index的精髓
+- sort_index()：原本會根據index排序，但若是multiindex(index數>1)，則可以指定要排序哪一個index。sort_index(level = "Country")就是以Country排序，也可以寫sort_index(level = 2)
 
 ```
 import pandas as pd
 bigmac = pd.read_csv("bigmac.csv", parse_dates=["Date"], date_format="%Y-%m-%d", index_col=["Date", "Country"]).sort_index()
 bigmac.set_index(keys = ["Date", "Country"])
+```
+
+#### get_level_values():取出所有index的值
+
+#### set_names():取出所有index的值
+```
+# 將Date改為Time
+bigmac.index.set_names(names="Time",level=0)
+# 將Country改為Location
+bigmac.index.set_names(names="Location",level=1)
+# 透過List直接改寫index name
+bigmac.index = bigmac.index.set_names(names=["Time","Location"])
+```
+#### sort)index():ascending = True/ False
+```
+import pandas as pd
+bigmac = pd.read_csv("bigmac.csv", parse_dates=["Date"], date_format="%Y-%m-%d", index_col=["Date", "Country"]).sort_index()
+bigmac.sort_index(ascending=True)
+bigmac.sort_index(ascending=False)
+bigmac.sort_index(ascending = [True, False]) #指定每個index的排序狀況，使用list並對照index
 ```
 
 
