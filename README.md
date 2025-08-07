@@ -1,7 +1,7 @@
-# Python_practice
+# Python_Practice
 這份專案練習以Kaggle中的[銷售資料](https://www.kaggle.com/datasets/rohitgrewal/restaurant-sales-data)為例作為資料庫操作練習
 
-## 資料清理順序
+## 零、資料清理順序
 
 ## 一、匯入資料 
 
@@ -15,7 +15,7 @@ print(sales_data)
 
 ### pd.DataFrame():最基本的創建一個DataFrame物件，可以把它想像為一個Excel表格，有以下幾種常見用法
 
-- 字典 Dicitionary:key為欄位名稱，value為欄位資料
+- **字典 Dictionary：key為欄位名稱，value為欄位資料**
 ```
 import pandas as pd
 data = {
@@ -26,16 +26,16 @@ data = {
 df = pd.DataFrame(data)
 print(df)
 ```
-結果
+***
 ```
-姓名  年齡  城市
+   姓名  年齡  城市
 0  張三  25  台北
 1  李四  30  高雄
 2  王五  35  台中
 ```
 ***
 
-- 列表List裡的字典
+- **列表List裡的字典**
 ```
 import pandas as pd
 data = [
@@ -46,7 +46,7 @@ data = [
 df = pd.DataFrame(data)
 print(df)
 ```
-結果
+***
 
 ```
    姓名  年齡  城市
@@ -55,7 +55,7 @@ print(df)
 2  王五  35  台中
 ```
   
-- 使用二維列表 List of List **較難**
+- **使用二維列表 List of List**
 
 ```
 import pandas as pd
@@ -69,8 +69,7 @@ columns = ['姓名', '年齡', '城市']
 df = pd.DataFrame(data, columns=columns)
 print(df)
 ```
-結果
-
+***
 ```
    姓名  年齡  城市
 0  張三  25  台北
@@ -78,11 +77,24 @@ print(df)
 2  王五  35  台中
 ```
 
-## 三、以下爲常用解析資料，初步了解表格資訊
+## 三、常用解析資料指令
 
-- sales_data.size  # 共有2286個項目，只會考慮列數*欄數，不考慮遺漏值(NaN)
-- sales_data.count() #回傳非空值 (non-null)
+- sales_data.size
 
+    - 回傳`DataFrame`中所有元素。等於欄*列，不考慮遺漏值(NaN)
+    - E.G. 共有2286個項目
+
+- sales_data.shape 
+
+    - 回傳一個tuple，包含(列, 欄)
+    - (254, 9)->25列9欄
+
+- sales_data.count
+
+    - 回傳非空值 (non-null)
+    - E.G.，可以看到每一欄的數量一樣，代表沒有遺漏值
+
+```
 Order ID          254
 Date              254
 Product           254
@@ -94,28 +106,182 @@ Manager           254
 City              254
 dtype: int64
 
-- sales_data.values  打印出所有的值
-- sales_data.index  索引值 # RangeIndex(start=0, stop=254, step=1) 有253列
-- sales_data.shape  (行,列) # (254, 9) 25列9欄
+```
+```
+import pandas as pd
+
+# 建立一個包含遺漏值的 DataFrame
+df = pd.DataFrame({
+    '學生ID': [101, 102, 103, 104, 105],
+    '國文': [85, 90, np.nan, 78, 88],
+    '數學': [75, 88, 92, np.nan, 95],
+    '英文': [95, 80, np.nan, 90, np.nan],
+    '性別': ['男', '女', '男', '女', np.nan]
+})
+
+print(df)
+valid_counts = df.count()
+print(valid_counts)
+```
+```
+原始 DataFrame：
+   學生ID   國文   數學   英文 性別
+0   101  85.0  75.0  95.0  男
+1   102  90.0  88.0  80.0  女
+2   103   NaN  92.0   NaN  男
+3   104  78.0   NaN  90.0  女
+4   105  88.0  95.0   NaN  NaN
+
+學生ID    5
+國文      4
+數學      4
+英文      3
+性別      4
+dtype: int64
+```
+
+- sales_data.values  
+    - 打印出所有的值，不取labels
+
+```
+import pandas as pd
+import numpy as np
+
+data = pd.DataFrame({
+    '姓名': ['小明', '小華', '小李'],
+    '年齡': [25, 30, 28],
+    '城市': ['台北', '台中', '高雄']
+}, index=['a', 'b', 'c'])
+print(data)
+raw_data = data.values
+print(raw_data)
+```
+```
+原始 DataFrame：
+    姓名  年齡  城市
+a  小明  25  台北
+b  小華  30  台中
+c  小李  28  高雄
+------------------------------
+使用 .values 屬性後的結果：
+[['小明' 25 '台北']
+ ['小華' 30 '台中']
+ ['小李' 28 '高雄']]
+ ```
+
+- sales_data.index  索引值
+
+    - E.G. RangeIndex(start=0, stop=254, step=1) 有253列
+    - 可以回傳所有的標籤 (row labels)
+    - .index可以最為`.loc` 的選取標籤基礎，或者merge、concat dataframe時用來對齊數據
+
+```
+# label = integer
+import pandas as pd
+df_default = pd.DataFrame({
+    '產品': ['A', 'B', 'C'],
+    '價格': [100, 150, 120]
+})
+print(df_default.index)
+
+# label = custom label
+df_custom = pd.DataFrame({
+    '產品': ['A', 'B', 'C'],
+    '價格': [100, 150, 120]
+}, index=['第一季', '第二季', '第三季'])
+print(df_custom)
+```
+```
+   產品  價格
+0  A   100
+1  B   150
+2  C   120
+------------
+      產品  價格
+第一季  A   100
+第二季  B   150
+第三季  C   120
+```
 - sales_data.columns 回傳每一欄的值
 ```
 Index(['Order ID', 'Date', 'Product', 'Price', 'Quantity', 'Purchase Type',
        'Payment Method', 'Manager', 'City'],
       dtype='object')
-sales_data.describe
 ```
 
 <img src="/images/03.png" width="50%">
 
-- sales_data.dtypes  各欄內值的type
-- sales_data.head()  預設前五
-- sales_data.tail()  預設後五
+- sales_data.dtypes  
+
+    - 查看個欄位的data type
 ```
-250 in sales_data.index  # 250為表格中其中一個index
-"Product" in sales_data  # True
-"Beverages" in sales_data.values
+import pandas as pd
+# 建立一個模擬的 DataFrame
+sales_data_mock = pd.DataFrame({
+    '日期': pd.to_datetime(['2022-01-01', '2022-01-02']),
+    '產品名稱': ['薯條', '漢堡'],
+    '數量': [2, 1],
+    '單價': [30.5, 85.0]
+})
+print(sales_data_mock)
+data_types = sales_data_mock.dtypes
+print(data_types)
 ```
-- sales_data.info 查看Dtype, memory狀況等等。尤其要注意日期是否為datetime格式
+```
+    日期      產品名稱 數量 單價
+0 2022-01-01    薯條   2  30.5
+1 2022-01-02    漢堡   1  85.0
+------------------------------
+使用 .dtypes 屬性後的結果：
+日期         datetime64[ns]
+產品名稱           object
+數量              int64
+單價            float64
+dtype: object
+```
+
+- sales_data.head()  
+
+    - 預設前五筆資料
+- sales_data.tail()  
+
+    - 預設後五筆資料
+- sales_data.info 
+
+    - 查看Dtype, memory狀況等等。尤其要注意日期是否為datetime格式
+```
+import pandas as pd
+import numpy as np
+data_mock = pd.DataFrame({
+    '日期': pd.to_datetime(['2022-01-01', '2022-01-02', '2022-01-03']),
+    '產品名稱': ['薯條', '漢堡', '漢堡'],
+    '數量': [2, 1, np.nan],
+    '價格': [30.5, 85.0, 85.0],
+    '城市': ['台北', np.nan, '高雄']
+})
+print(data_mock)
+# 使用 .info() 函式
+data_mock.info()
+```
+```
+          日期 產品名稱   數量    價格   城市
+0 2022-01-01    薯條  2.0  30.5  台北
+1 2022-01-02    漢堡  1.0  85.0  NaN
+2 2022-01-03    漢堡  NaN  85.0  高雄
+------------------------------
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 3 entries, 0 to 2
+Data columns (total 5 columns):
+ #   Column  Non-Null Count  Dtype         
+---  ------  --------------  -----         
+ 0   日期      3 non-null      datetime64[ns]
+ 1   產品名稱    3 non-null      object        
+ 2   數量      2 non-null      float64       ->有一個遺漏值
+ 3   價格      3 non-null      float64       
+ 4   城市      2 non-null      object        ->有一個遺漏值
+dtypes: datetime64[ns](1), float64(2), object(2)
+memory usage: 248.0+ bytes
+```
 
 <img src="/images/06.png" width="50%">
 
