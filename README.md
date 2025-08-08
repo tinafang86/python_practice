@@ -288,7 +288,7 @@ memory usage: 248.0+ bytes
 - sales_date.to_date()
 
     - to_date是一種將資料轉成日期格式的格式，但不能協助變更日期年月日呈現方式。
-    - 因此format=xxx必須跟著原始raw data的形式，但若要改變呈現方式可以使用df.strftime()->字串string的格式化時間
+    - 因此format=xxx必須跟著原始raw data的形式，但若要改變呈現方式可以使用df.strftime()->字串string的格式化時間**
 
 ```
 import pandas as pd
@@ -307,60 +307,184 @@ sales_data = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", parse_dates=["Date"], date_format = "%d-%m-%Y" )
 ```
 
-- sales_data.unique() 查看個欄位不重複的值
+- sales_data.unique() 
+
+    - 查看個欄位不重複的值的個數
+
+```
+import pandas as pd
+data = {'姓名': ['小明', '小華', '小明', '小華', '小李'],
+        '部門': ['業務', '', '業務', '技術', '行政'],
+        '薪水': [30000, 50000, 30000, 50000, 35000]}
+df = pd.DataFrame(data)
+print(df)
+```
+```
+   姓名  部門     薪水
+0  小明  業務  30000
+1  小華  技術  50000
+2  小明  業務  30000
+3  小華  技術  50000
+4  小李  行政  35000
+```
+```
+print(df.nunique())
+# 若要包含NaN，則nunique(dropna = False)
+```
+```
+姓名    3
+部門    3
+薪水    3
+dtype: int64
+```
 
 ## 四、專注處理單一或少數欄位
 
-- 我只看Product、Payment Method欄位，透過column name取得
+- 只看特定欄位，用欄位名稱查找：usecol = ["col_A", "col_B",...]
+- 取得Product、Payment Method欄位，透過column name取得
 
 ```
 import pandas as pd
 datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product","Payment Method"])
-datas
+print(datas)
 ```
 <img src="/images/01.png" width="50%">
 
 ***
 
-- 我只看Product、Payment Method欄位，透過column index取得
+- 只看特定欄位，用欄位index查找：usecol = ["index1", "index2",...]
+- 取得Product、Payment Method欄位，透過column index取得
 ```
 datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=[2,5])
 datas
 ```
 
-## 五、Series被squeeze為純量（無維度）
-```datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product"]).squeeze("columns")
+## 五、squeeze為純量（無維度）
+
+- squeeze()擠壓，將多餘的維度擠掉讓維度降至最低
+
+    - 從 DataFrame 變成 Series：當你的 DataFrame 只有 1 行 或 1 欄 時。
+    - 從 Series 變成純量值 (Scalar)：當你的 Series 只有 1 個值 時。
+
+- df.squeeze()：不帶參數，會自動判斷是否有只有 1 個維度可以擠壓。
+- df.squeeze("columns")：明確指定要擠壓的是欄位維度。
+
+```
+datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product"]).squeeze("columns")
 ```
 <img src="/images/02.png" width="50%">
 
+```
+import pandas as pd
+
+# 範例一：單欄的 DataFrame
+df_one_col = pd.DataFrame({'A': [1, 2, 3]})
+print(df_one_col)
+print(type(df_one_col))
+
+# 擠壓欄位
+s1 = df_one_col.squeeze()
+print(s1)
+print(type(s1))
+```
+```
+   A
+0  1
+1  2
+2  3
+<class 'pandas.core.frame.DataFrame'>
+----------
+0    1
+1    2
+2    3
+Name: A, dtype: int64
+<class 'pandas.core.series.Series'>
+
+```
+
+- df.squeeze("index")：明確指定要擠壓的是index維度。
+
+    - df_one_row 只有一個索引（0），squeeze("index") 會將這個多餘的「索引」維度擠壓掉，同樣把它變成一個 Series。
+    - 轉換後的 Series 保留了欄位名稱 (A, B, C) 作為新的索引，而原本的索引 (0) 則變成了 Name。型態同樣變成了 Series。
+
+
+```
+df_one_row = pd.DataFrame({'A': [1], 'B': [2], 'C': [3]})
+print(df_one_row)
+```
+```
+   A  B  C
+0  1  2  3
+```
+
+```
+import pandas as pd
+# 建立一個包含多項商品的 DataFrame
+products_df = pd.DataFrame({
+    '商品': ['筆電', '手機', '平板'],
+    '價格': [30000, 20000, 15000],
+    '庫存': [10, 25, 12]
+})
+
+# 篩選出價格為 20000 的商品
+single_product_df = products_df[products_df['價格'] == 20000]
+print(single_product_df)
+print(f"型態：{type(single_product_df)}")
+```
+
+```
+   商品   價格  庫存
+1  手機  20000  25
+型態：<class 'pandas.core.frame.DataFrame'>
+```
+
+```
+single_product_series = single_product_df.squeeze("index")
+print(single_product_series)
+print(f"型態：{type(single_product_series)}")
+```
+
+```
+商品       手機
+價格      20000
+庫存       25
+
+Name: 1, dtype: object
+型態：<class 'pandas.core.series.Series'>
+```
+
 ## 六、調整欄位順序
 
-### 牽涉copy（複製） and view（視圖）概念
-### copy
+### 1. 牽涉copy（複製） and view（視圖）概念
+### (1) copy：複製DataFrame
 
-```datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv",
+```
+datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv",
                     usecols=["Product", "Payment Method"])
 ```
 #### 方法一：透過新變數定義新資料表。不會操作到原始資料，而是複製到 data_restored 這個新的變數 （更常用）
 ```
-data_restored = datas[["Product", "Payment Method"]]
-data_restored = datas[["Payment Method", "Product"]]
+# 以下儲存兩個欄爲順續不同的DataFrame
+data_restored1 = datas[["Product", "Payment Method"]]
+data_restored2 = datas[["Payment Method", "Product"]]
 ```
 
 #### 方法二：使用使用 pd.DataFrame() 建立新物件
+
+- 請根據 datas 這個數據源，建立一個新的DataFrame，但新DataFrame 中只包含 Payment Method 和 Product 這兩個欄位，並且 Payment Method 必須是第一個欄位，Product 是第二個。
+
 ```
 pd.DataFrame(datas, columns=["Payment Method", "Product"])
 ```
 
 ***
 
-### view
+### (2) view:檢視DataFrame
 #### 方法一：直接針對原始資料新增一個新欄位
 ```
 import pandas as pd
 sales_data = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
-sales_data
 sales_data["grade"] = [100,100,100,100] ＃ 新增一個grade欄位
 ```
 
@@ -378,7 +502,15 @@ df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]}, index=['x', 'y', 'z'])
 df.loc['y', 'B'] = 99
 print(df)
 
-  A   B
+------------
+原始
+   A   B
+x  1   4
+y  2   5
+z  3   6
+------------
+結果
+   A   B
 x  1   4
 y  2  99
 z  3   6
@@ -386,7 +518,6 @@ z  3   6
 
 ```
 import pandas as pd
-
 # 創建一個 DataFrame 來記錄學生成績
 grades_data = {
     '國文': [85, 92, 78],
@@ -404,18 +535,18 @@ print(grades_df)
 
 ```
 
-### 使用 .loc 選取 '小華' 到 '小強' (包含) 的列，和 '國文' 到 '英文' (包含) 的欄
+- 使用 .loc 選取 '小華' 到 '小強' (包含) 的列，和 '國文' 到 '英文' (包含) 的欄
 
 ```
 subset_loc = grades_df.loc['小華':'小強', '國文':'英文']
 print(subset_loc)
-
 ```
 
-    國文  英文
-小華  92  80
-小強  78  82
-
+```
+     國文  數學  英文
+小華  92  88  80
+小強  78  95  82
+```
 
 - .iloc:基於位置 (position) 進行索引和修改。
 
@@ -429,31 +560,34 @@ students = ['小明', '小華', '小強']
 grades_df = pd.DataFrame(grades_data, index=students)
 print(grades_df)
 ```
-
+```
    國文  數學  英文
 小明  85  90  75
 小華  92  88  80
 小強  78  95  82
+```
 
 ```
 score_iloc = grades_df.iloc[1, 1]
 print(f"\n小華的數學成績 (iloc)：{score_iloc}")
+
+# 小華的數學成績 (iloc)：88
 ```
-小華的數學成績 (iloc)：88
 
 ## 七、整理資料
 
-### 處理文字數據
+### 1.處理文字數據
 
 ```
 sales_data["Product"].str.lower() #全小寫
 sales_data["Product"].str.upper() #全大寫
 sales_data["Product"].str.title() #首字大寫，其徐小寫
-sales_data["Product"].str.len()
+sales_data["Product"].str.len() #字數
 sales_data["Product"].str.strip() # 移除空白
 sales_data["Product"].str.lstrip() #移除開頭空白
 sales_data["Product"].str.rstrip() #移除結尾空白
-sales_data["Product"].str.replace("Beverages", "drinks") #將Beverages全部改為drinks
+sales_data["Product"].str.replace("Beverages", "drinks") 
+#將Beverages全部改為drinks
 ```
 
 ```
@@ -471,17 +605,29 @@ import pandas as pd
 sales_data = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", index_col=["Order ID"])
 sales_data.columns = sales_data.columns.str.lower()
-print(sales_data)
+print(sales_data.columns)
+```
+```
+Index(['date', 'product', 'price', 'quantity', 'purchase type',
+       'payment method', 'manager', 'city'],
+      dtype='object')
 ```
 
-### 處理文字數據 - get
+### 2. 處理文字數據 - .str.get()
+
+- get(0):列表中第1個元素
+- get(1):列表中第2個元素
+- 以下範例解釋：從資料庫取值之後，我只要取"Manager"（姓名）欄位。因為名字中間有空白值，所以用split將其分為不同元素。例如"Tina Fang"->["Tina", "Fang"]
+- get(0)用來取[ ]中第一個元素，得到"Tina"
+- value_counts則將每一個元素計算unique value出現的次數
 
 ```
 import datetime as dt
 import pandas as pd
 sales_data = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv")
-sales_data["Manager"].str.split().str.get(0).value_counts() #get=0代表第一個元素，get=1代表第二個元素
+
+sales_data["Manager"].str.split().str.get(0).value_counts() 
 
 Manager
 Tom       75
@@ -492,7 +638,10 @@ Remy      28
 Name: count, dtype: int64
 ```
 
-### 處理文字數據 - split(expand = True/False)
+### 3. 處理文字數據 - .str.split(expand = True/False)
+
+- ``df..str.split(expand = False)``:預設值，會被儲存為列表方便後續操作
+- ``df..str.split(expand = True)`` :會被展開成新的DataFrame
 ```
 import datetime as dt
 import pandas as pd
@@ -512,8 +661,9 @@ sales_data["Manager"].str.split(expand=False)
 252    [Walter, Muller]
 253    [Walter, Muller]
 Name: Manager, Length: 254, dtype: object
-
- 
+```
+- ``df..str.split(expand = True, n=1)``:展開為新的DataFrame，且只分割一次(n=1)
+```
 sales_data["Manager"].str.split(expand=True, n = 1)
 # 根據一個空個分裂
 
@@ -531,9 +681,9 @@ sales_data["Manager"].str.split(expand=True, n = 1)
 ```
 
 
-### 處理遺漏值I
+### 4. 處理遺漏值
 
-#### dropna():刪除遺漏值
+#### (1) dropna():刪除遺漏值
 - dropna(how = "all")：如果整欄或整列都為遺漏值NaN，就刪去他
 - dropna(how = "any")：如果整欄或整列有一個遺漏值NaN，就刪去他
 
@@ -542,11 +692,12 @@ import pandas as pd
 sales_data = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv").dropna(how = "all")
 
-# 最後透過size檢查個數是否有增減情況確認遺漏值
+# 最後透過size或info檢查個數是否有增減情況確認遺漏值
 sales_data.size
+sales_data.info
 ```
 
-#### fillna():填補遺漏值
+#### (2) fillna():填補遺漏值
 - fillna(0)：前面常見使用dropna(how = "all")刪除整列0的數據，但那些少數NaN (Not a Number)在表格裡，此時指定他為0
 - NaN就算指定為0，在資料型態中仍然算是float，因此建議搭配 astype():()裡面可以放float, int, ...
 
@@ -558,14 +709,15 @@ sales_data = sales_data.fillna(0).astype(int)
 ```
 ***
 
-#### billna():由遺漏值下一位數字填補
+#### (3) billna():由遺漏值下一位數字填補
 
 - 時間序列資料：例如預測接下來股市資料，可以用後面的數字補值會更準
 - 資料延遲：股市交易時因為資料太大來不及運算，會先用NaN補空值，bfill()則可以取一個較能反應最終資料的數值。
 - 與ffill為互補關係。例如最開頭的NaN
 ***
 
-### 處理遺漏值II
+#### (4) isnull()/ notnull():找出空缺值 
+
 - df.isnull():找出空缺值。若值為NaN則為True，否則為False
 - df.notnull()：找出非空缺值。若值為非空缺值則為True，否則為False
 
@@ -603,15 +755,15 @@ exist_value = sales_data["Order ID"].notnull() # 找出非空缺值
 ```
 ***
 
-### 處理特定資料的遺漏值：subset["",""]子集功能
+#### (5) 處理特定資料的遺漏值：subset["",""]子集功能
 - 請在 sales_data 中，只檢查 Order ID 這一個欄位。如果某列的 Order ID 欄位是空的（NaN），那麼就將整列資料都移除。
 ```
 sales_data = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv").dropna(how="all", subset = ["Order ID"])
 ```
 ***
-### 排序數字
-#### sort_values(ascending = True) (由小到大)
+### 5. 排序數字
+#### (1) sort_values(ascending = True) (由小到大)
 - Series的sort_values()
 ```
 import pandas as pd
@@ -624,7 +776,33 @@ new_data = pd.read_csv(
 ```
 - DataFrame的sort_values()
 
-#### 操作一個欄位
+```
+import pandas as pd
+sales_data = {
+    '地區': ['台北', '高雄', '台北', '台中'],
+    '產品': ['A', 'B', 'A', 'C'],
+    '銷售額': [150, 200, 100, 250],
+    '日期': ['2023-01-01', '2023-01-02', '2023-01-03', '2023-01-04']
+}
+sales_df = pd.DataFrame(sales_data)
+print(sales_df)
+```
+
+```
+# by 指定排序的欄位，ascending=False 表示降序排列
+sorted_by_sales = sales_df.sort_values(by='銷售額', ascending=False)
+print(sorted_by_sales)
+```
+
+```
+    地區 產品 銷售額   日期
+3   台中  C  250  2023-01-04
+1   高雄  B  200  2023-01-02
+0   台北  A  150  2023-01-01
+2   台北  A  100  2023-01-03
+```
+
+#### (2) 操作一個欄位
 ```
 import pandas as pd
 sales_data = pd.read_csv(
@@ -632,7 +810,7 @@ sales_data = pd.read_csv(
 sales_data.sort_values(by = "Price") # 價錢由小到大
 sales_data.sort_values(by = "Price", ascending=False) # 價錢由大到小
 ```
-#### 操作多個欄位
+#### (3) 操作多個欄位
 ```
 import pandas as pd
 sales_data = pd.read_csv(
@@ -642,7 +820,8 @@ sales_data.sort_values(by = ["Price","Quantity"]) # 根據Price由小到大，Qu
 sales_data.sort_values(by = ["Price","Quantity"], ascending=[False, True]) # 價錢由大到小，Quantity由小到大
 
 ```
-#### sort_index(ascending = True) (由小到大)
+- sort_index(ascending = True) (由小到大)
+sort_index(ascending = False) (由大到小)
 
 ```
 import pandas as pd
@@ -654,39 +833,48 @@ B  3  6
 
 df_sorted = df.sort_index(axis = 0) # ascending預設為True，由小到大
 
-        A	B
+    A	B
 A	2	5
 B	3	6
 C	1	4
 
 df_sorted = df.sort_index(axis = 0, ascending = False) # axis = 0針對列索引值排序，axis = 1針對欄索引值排序
 
-        A	B
+    A	B
 C	1	4
 B	3	6
 A	2	5
 
 df_sorted = df.sort_index(axis = 1, ascending = False) # 操作欄，由大到小排序
 
-        B	A
+    B	A
 C	4	1
 A	5	2
 B	6	3
 ```
 
-#### Series取值
-- .get_group()
+### 6. Series取值
+#### (1).get_group()
+
+將原始資料轉為Series，Product為索引index，Price為欄
 ```
-# 將原始資料轉為Series，Product為索引index，Price為欄
 data01 = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product", "Price"], index_col=["Product"])
-# 發現index重複度很高，用groupby()將一樣的值合併，但需要注意groupby()是分組操作不會直接顯示成果
+```
+
+發現index重複度很高，用groupby()將一樣的值合併，但需要注意 ***groupby()是分組操作不會直接顯示成果***
+
+```
 onlydata = data01.groupby(by = "Product")
+
+----
 # <pandas.core.groupby.generic.DataFrameGroupBy object at 0x1269b6c60>
+```
+onlydata.column，得知欄位包含Beverages、Burgers、Chicken Sandwiches、Fries、Sides & Other 
 
-# 透過mean()先看一下分組狀況，得知欄位包含Beverages、Burgers、Chicken Sandwiches、Fries、Sides & Other 
+```
 print(onlydata.mean())
-
+------
 #                         Price
 # Product                      
 # Beverages            2.950000
@@ -694,12 +882,14 @@ print(onlydata.mean())
 # Chicken Sandwiches  10.317308
 # Fries                3.921569
 # Sides & Other        4.990000
+```
+透過get_group找出burger的價錢
 
-
-# 透過get_group找出burger的價錢
+```
 burgerdata = onlydata.get_group("Burgers")
-burgerdata
+print(burgerdata)
 
+----------------
        Price
 Product	
 Burgers	12.99
@@ -715,7 +905,7 @@ Burgers	12.99
 Burgers	12.99
 
 ```
-- .loc()
+##### (2) .loc()
 ```
 data01 = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Product", "Price"], index_col=["Product"])
@@ -729,18 +919,19 @@ burgerdata = average_data.loc["Burgers", "Price"] # loc["第一個索引值，�
 
 ```
 
-#### DataFrame取值
+### 7. DataFrame取值
+
 - df[value1]
 - df.loc[列的標籤, 欄的標籤] (推薦)
 
-### 計算每一列個數
+#### 計算每一列個數
 
 ```
 datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv",
                     usecols=["Product"])
 
 datas.value_counts()
-```
+------------------------------
 
                    Product           
 Burgers               52
@@ -749,8 +940,9 @@ Fries                 51
 Beverages             50
 Sides & Other         49
 Name: count, dtype: int64
+```
 
-### 計算每一列個數並換算為比例
+#### 計算每一列個數並換算為比例
 
 ```
 datas = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv",
@@ -760,14 +952,14 @@ datas.value_counts(normalize = True) #計算個數並換算為比例 # Return pr
 
 ```
 
-### 計算欄位為數字的項目並加總，如Quantity
+#### 計算欄位為數字的項目並加總，如Quantity
 ```
 # 計算欄位為數字的項目並加總，如Quantity
 import pandas as pd
 sales_data = pd.read_csv(
     "/Users/tinafung8686/Desktop/python_sales-data/Sales-Data-Analysis.csv", usecols=["Quantity","Price"])
 sales_data
-```
+----------------------
 	Price	Quantity
 0	3.49	573.07
 1	2.95	745.76
@@ -775,19 +967,21 @@ sales_data
 3	12.99	569.67
 4	9.95	201.01
 ...	...	...
+```
 
 垂直計算，所以會把Price這一列和Quantity這一列的所有值都相加
 ```
 sales_data.sum(axis = 0) 
-```
+-------------------------
 Price         1803.99
 Quantity    116995.31
 dtype: float64
+```
 
 水平計算，每一列代表Price + Quantity的值
 ```
 sales_data.sum(axis = 1)
-```
+---------------------------
 0      576.56
 1      748.71
 2      205.39
@@ -800,6 +994,7 @@ sales_data.sum(axis = 1)
 252    633.86
 253    680.92
 Length: 254, dtype: float64
+```
 
 #### 處理時間
 
