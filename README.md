@@ -1419,11 +1419,216 @@ print(df2)
 
 ```
 
+# 未整理重點
+
+## 九、資料表結合 Merge DataFrame
+
+### Our Datasets:餐廳銷售
+
+```
+import pandas as pd
+food = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/restaurant_foods.csv")
+customers = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/restaurant_customers.csv")
+week1 = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/restaurant_week_1_sales.csv")
+week2 = pd.read_csv("/Users/tinafung8686/Desktop/python_sales-data/restaurant_week_2_sales.csv")
+```
+<img src="/images/11.png" width="50%">
+<img src="/images/12.png" width="50%">
+<img src="/images/13.png" width="50%">
+
+### (1) 欄位名稱一樣時，直接做concat
+
+- pd.concat([column1, column2])
+
+得知若合併week1與week2會有250 rows
+```
+len(week1) #250
+len(week2) #250
+```
+week1的index由0-249, week2的index也是0-249，所以下方截圖的index 249其實是week2的index
+
+```
+pd.concat([week1, week2])
+```
+<img src="/images/14.png" width="50%">
+
+- pd.concat([column1, column2], ignore_index = xxxx)
+
+```
+pd.concat([week1, week2], ignore_index = False) #預設，保留index
+pd.concat([week1, week2], ignore_index = True) #index繼續排序下去
+```
+<img src="/images/15.png" width="50%">
+
+```
+pd.concat([week1, week2], keys=["Week1", "Week2"]).sort_index()
+```
+<img src="/images/16.png" width="50%">
+
+### (2)欄位名稱不同時做concat
+
+```
+df1 = pd.DataFrame([1,2,3], columns=["A"])
+ 
+    A
+0	1
+1	2
+2	3
+
+df2 = pd.DataFrame([1,2,3], columns=["B"])
+
+    B
+0	1
+1	2
+2	3
+
+pd.concat([df1, df2])
+# 等於 pd.concat([df1, df2], axis="index")
+
+	 A	 B
+0	1.0	NaN
+1	2.0	NaN
+2	3.0	NaN
+0	NaN	1.0
+1	NaN	2.0
+2	NaN	3.0
+
+pd.concat([df1, df2], axis= "columns")
+
+    A	B
+0	1	1
+1	2	2
+2	3	3
+ 
+```
+
+### (3) merge
+
+- 基本語法：pd.merge(left, right, on=None, how='inner')
+    - left, right：想合併的2個DataFrame
+    - on:要合並的共同欄位。如果欄位名稱不同，使用left_on/ right_on
+    - how:如何連接
+        - how = "left":
+        
+        它會保留 left DataFrame 中所有的資料，並根據 on 欄位去匹配 right DataFrame 的資料。如果 right DataFrame 中沒有對應的資料，同樣會用 NaN 填充。你可以把它想像成以左邊的表格為主，確保所有左邊的員工資料都會被保留。
+        - how = "right":
+
+        與 left 剛好相反，它會保留 right DataFrame 中所有的資料，並去匹配 left DataFrame 的資料。
+
+        - how = "inner"
+
+        這是最常用，也是預設的合併方式。它只保留兩個 DataFrame 中 on 欄位都有的資料。想像成只有同時出現在兩張表格中的員工，才會被保留下來。
+
+        - how = "outer"
+
+        它會保留兩個 DataFrame 中所有的資料。如果某筆資料只出現在其中一個 DataFrame，另一個 DataFrame 的欄位會用 NaN（不是一個數字，通常代表缺失值）來填充。這就像是把兩個 DataFrame 的所有員工都列出來，即使有些員工只有基本資訊沒有薪資，反之亦然。
 
 
+#### left joins()
+
+##### (1) joins時發現有共同欄位
+
+- 查看week1和food，發現共同點是Food ID
+
+```
+week1.head()
+
+	Customer ID	Food ID
+0	537	         9
+1	97	         4
+2	658	         1
+3	202	         2
+4	155	         9
+
+food.head()
+
+	Food ID	Food Item	Price
+0	1	   Sushi	   3.99
+1	2	   Burrito	   9.99
+2	3	   Taco    	   2.99
+3	4	   Quesadilla  4.25
+4	5	   Pizza	   2.49
+
+```
+- 現在我要把Food ID concat，以week1作為left table
+
+```
+week1.merge(food, how = "left", on = "Food ID")
+```
+
+<img src="/images/17.png" width="50%">
+
+##### (2) joins時發現沒有共同欄位
+
+- Customer ID和ID
+
+```
+week2.head()
+---------
+	Customer ID	Food ID
+0	688	       10
+1	813        7
+2	495	       10
+3	189	       5
+4	267        3
+
+customers.head()
+
+--------------------
+    ID	First Name	Last Name	Gender	Company	Occupation
+0	1	Joseph	    Perkins	    Male	Dynazzy	Community Outreach Specialist
+1	2	Jennifer	Alvarez	    Female	DabZ	Senior Quality Engineer
+2	3	Roger	    Black	    Male	Tagfeed	Account Executive
+3	4	Steven	    Evans	    Male	Fatz	Registered Nurse
+4	5	Judy	    Morrison	Female	Demivee	Legal Assistant
+```
+
+- week2和customers表格做merge。方式是week2左邊黏著customers (how = "left")
+- 沒有空同欄位不能用on，改用left on (左表格)和right on告訴panda連接欄位名稱
+```
+week2.merge(customers, how="left", left_on="Customer ID", right_on = "ID")
+```
+<img src="/images/18.png" width="50%">
+
+- 發現Customer ID和ID重複，將ID刪除保留一項即可
+
+```
+week2.merge(customers, how="left", left_on="Customer ID", right_on = "ID").drop(columns = "ID")
+```
 
 
+#### right joins()
 
+#### inner joins()
+
+- 找出連續2週都來用餐的顧客 (相同Customer ID)
+
+- Customer ID 537在week1 買Food ID 9，在week2買Food ID 5
+
+```
+week1.merge(week2, how = "inner", on = "Customer ID").head()
+-----------------------------------------
+	Customer ID	Food ID_x	Food ID_y
+0	   537	         9	     5
+1	   155        	 9	     3
+2	   503	         5	     8
+3	   503	         5	     9
+4	   155	         1	     3
+```
+
+- suffixes([])
+
+```
+week1.merge(week2, how = "inner", on = "Customer ID", suffixes=[" - Week1", " - Week2"]).head()
+-----------------------------------------
+	Customer ID	Food ID_Week1	Food ID_Week2
+0	   537	         9	         5
+1	   155        	 9	         3
+2	   503	         5	         8
+3	   503	         5	         9
+4	   155	         1	         3
+```
+#### full joins joins()
 
 
 
