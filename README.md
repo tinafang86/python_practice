@@ -286,7 +286,9 @@ memory usage: 248.0+ bytes
 <img src="/images/06.png" width="50%">
 
 - sales_date.to_date()
-**to_date是一種讀取的格式，不能協助變更type。因此format=xxx必須跟著原始raw data的形式，但若要改變呈現方式可以使用df.strftime()->字串string的格式化時間**
+
+    - to_date是一種將資料轉成日期格式的格式，但不能協助變更日期年月日呈現方式。
+    - 因此format=xxx必須跟著原始raw data的形式，但若要改變呈現方式可以使用df.strftime()->字串string的格式化時間
 
 ```
 import pandas as pd
