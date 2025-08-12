@@ -1524,7 +1524,7 @@ pd.concat([df1, df2], axis= "columns")
         它會保留兩個 DataFrame 中所有的資料。如果某筆資料只出現在其中一個 DataFrame，另一個 DataFrame 的欄位會用 NaN（不是一個數字，通常代表缺失值）來填充。這就像是把兩個 DataFrame 的所有員工都列出來，即使有些員工只有基本資訊沒有薪資，反之亦然。
 
 
-#### left joins()
+#### A. left joins()
 
 ##### (1) joins時發現有共同欄位
 
@@ -1597,11 +1597,11 @@ week2.merge(customers, how="left", left_on="Customer ID", right_on = "ID").drop(
 ```
 
 
-#### right joins()
+#### B.right joins()
 
-#### inner joins()
+#### C.inner joins()
 
-- 找出連續2週都來用餐的顧客 (相同Customer ID)
+##### (1)找出連續2週都來用餐的顧客 (相同Customer ID)
 
 - Customer ID 537在week1 買Food ID 9，在week2買Food ID 5
 
@@ -1628,25 +1628,819 @@ week1.merge(week2, how = "inner", on = "Customer ID", suffixes=[" - Week1", " - 
 3	   503	         5	         9
 4	   155	         1	         3
 ```
-#### full joins joins()
+##### (2)找出同個顧客連續2週買同樣food ID
+
+```
+week1.merge(week2, how = "inner", on = ["Customer ID", "Food ID"]).sort_values("Customer ID")
+---------------------------------
+	Customer ID	Food ID
+4	    21	    4 ->duplicate
+6	    21	    4
+3	    233	    3
+0	    304	    3
+1	    540	    3
+7	    578	    5 ->duplicate
+8	    578	    5
+5	    922	    1 ->duplicate
+2	    937	    10
+
+```
+檢查重複項
+
+```
+condition1  = week1["Customer ID"] == 21 #boolean
+condition2 = week1["Food ID"] == 4 #boolean
+week1[condition1 & condition2]
+-------------------------------
+	Customer ID	Food ID
+101	    21	    4
+212	    21	    4
 
 
+condition1  = week2["Customer ID"] == 21 #boolean
+condition2 = week2["Food ID"] == 4 #boolean
+week2[condition1 & condition2]
+-------------------------------
+	Customer ID	Food ID
+30	    21	    4
+
+```
+
+101 * 30 \
+212 * 30\
+->出現2次
+
+#### D. full joins()
+
+```
+week1.merge(week2, how = "outer", on = "Customer ID", suffixes=["Week1"," - Week2"])
+```
+
+<img src="/images/19.png" width="50%">
+
+- 查看合併狀況
+```
+week1.merge(week2, how = "outer", on = "Customer ID", suffixes=["Week1"," - Week2"], indicator=True)
+```
+<img src="/images/20.png" width="50%">
+
+```
+merge = week1.merge(week2, how = "outer", on = "Customer ID", suffixes=["Week1"," - Week2"], indicator=True)
+merge["_merge"].value_counts()
+```
+
+```
+_merge
+right_only    197
+left_only     195
+both           62
+Name: count, dtype: int64
+```
+
+- 把right_only和left_only的值取出
+
+```
+merge[merge["_merge"].isin(["left_only", "right_only"])]
+```
+<img src="/images/21.png" width="50%">
 
 
+#### E. left_index()、right_index()
+
+- 當左表column和右表的index合併
+
+```
+import pandas as pd
+food = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/restaurant_foods.csv", index_col="Food ID")
+customers = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/restaurant_customers.csv", index_col = "ID")
+week1 = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/restaurant_week_1_sales.csv")
+week2 = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python_sales-data/restaurant_week_2_sales.csv")
+
+week1.head()
+
+	Customer ID	Food ID
+0	    537	9
+1	    97	4
+2	    658	1
+3	    202	2
+4	    155	9
+-------------------------
+customers.head()
+
+week1.merge(customers, how = 'left', left_on="Customer ID", right_index=True) 
+```
+
+<img src="/images/22.png" width="50%">
+
+- 現在，再將food表格合併
+
+```
+
+week1.merge(customers, how = 'left', left_on="Customer ID", right_index=True).merge(food, how = "left", left_on = "Food ID", right_index=True )
+```
+
+<img src="/images/23.png" width="50%">
 
 
+#### F. the join method()
 
+- week1的資訊和week_1_times是可以match的，因此將他們整合成一張表。
+- 因為兩張表的index都是numerical numbers, 因此left/right index都是True
+- 因為確認兩張表可以直接合併，使用join()會快許多
 
+```
+wee1.head()
+-------------------
+  Customer ID	Food ID
+0	537	        9
+1	97	        4
+2	658	        1
+3	202	        2
+4	155	        9
 
+week1_time.head()
+-------------------
+	Time of Day
+0	14:54:59
+1	20:55:17
+2	01:16:22
+3	16:17:26
+4	19:26:11
+----------------------
 
+week1.merge(week1_time, how = "left", left_index=True, right_index=True)
 
+# a shortcut method
+week1.join(week1_time)
 
+```
 
+## 十、Dates and Times
 
+### 1. dt.date()
 
+```
+import pandas as od
+import datetime as dt
 
+someday = dt.date(2025, 10, 30)
+someday.year #2025
+someday.month # 10
+someday.day #30
+```
 
+### 2. dt.datetime()
+```
+import pandas as od
+import datetime as dt
+sometime = dt.datetime(2025, 10, 30, 1, 4, 30)
+sometime.hour # 1
+sometime.minute # 4
+sometime.second # 30
+```
 
+### 3.TimeStamp()
 
+- pd.Timestamp() 函式可以接受多種不同格式的輸入，並將它們都轉換成標準的 Timestamp 物件。
+- 時、分、秒後面若沒有寫，預設都是00:00:00
 
+```
+pd.Timestamp(2025, 10, 23)
+pd.Timestamp(dt.date(2025, 10, 23))
+```
 
+```
+pd.Timestamp(2025, 10, 23, 23, 59, 59)
+pd.Timestamp(dt.datetime(2025, 10, 23, 23, 59, 59))
+```
+
+- 智慧辨識不同的日期格式
+
+```
+pd.Timestamp("2025-01-02")
+pd.Timestamp("2025/01/02")
+pd.Timestamp("2025/01/02 10:23:40")
+```
+
+- pd.date_range()
+
+#### freq = "D"：間距一天
+
+```
+pd.date_range(start = "2025-01-20", end ="2025-01-31" )
+---------------
+DatetimeIndex(['2025-01-20', '2025-01-21', '2025-01-22', '2025-01-23',
+               '2025-01-24', '2025-01-25', '2025-01-26', '2025-01-27',
+               '2025-01-28', '2025-01-29', '2025-01-30', '2025-01-31'],
+              dtype='datetime64[ns]', freq='D')
+```
+
+#### freq = "2D"
+
+```
+pd.date_range(start = "2025-01-20", end ="2025-01-31", freq ="2D")
+-------------
+DatetimeIndex(['2025-01-20', '2025-01-22', '2025-01-24', '2025-01-26',
+               '2025-01-28', '2025-01-30'],
+              dtype='datetime64[ns]', freq='2D')
+```
+
+#### freq = "B": B for business days
+
+```
+pd.date_range(start = "2025-01-20", end ="2025-01-31", freq ="B")
+------------
+DatetimeIndex(['2025-01-20', '2025-01-21', '2025-01-22', '2025-01-23',
+               '2025-01-24', '2025-01-27', '2025-01-28', '2025-01-29',
+               '2025-01-30', '2025-01-31'],
+              dtype='datetime64[ns]', freq='B')
+
+```
+#### freq = "W"：預設是列出所有Sunday，若想改則需以W-MON 這樣修改
+```
+pd.date_range(start = "2025-01-20", end ="2025-01-31", freq ="W-Fri")
+------------
+DatetimeIndex(['2025-01-24', '2025-01-31'], dtype='datetime64[ns]', freq='W-FRI')
+```
+#### freq = "H"：間距為小時
+
+```
+pd.date_range(start = "2025-01-20 00:00:00", end ="2025-01-20 12:00:00", freq ="H")
+------------
+DatetimeIndex(['2025-01-20 00:00:00', '2025-01-20 01:00:00',
+               '2025-01-20 02:00:00', '2025-01-20 03:00:00',
+               '2025-01-20 04:00:00', '2025-01-20 05:00:00',
+               '2025-01-20 06:00:00', '2025-01-20 07:00:00',
+               '2025-01-20 08:00:00', '2025-01-20 09:00:00',
+               '2025-01-20 10:00:00', '2025-01-20 11:00:00',
+               '2025-01-20 12:00:00'],
+              dtype='datetime64[ns]', freq='h')
+
+```
+
+#### freq = "M"
+
+- ME:end day
+- MS:start day
+
+```
+pd.date_range(start = "2025-01-01", end ="2025-12-31", freq ="M")
+--------------
+DatetimeIndex(['2025-01-31', '2025-02-28', '2025-03-31', '2025-04-30',
+               '2025-05-31', '2025-06-30', '2025-07-31', '2025-08-31',
+               '2025-09-30', '2025-10-31', '2025-11-30', '2025-12-31'],
+              dtype='datetime64[ns]', freq='ME')
+```
+
+```
+pd.date_range(start = "2025-01-01", end ="2025-12-31", freq ="MS")
+-------------
+DatetimeIndex(['2025-01-01', '2025-02-01', '2025-03-01', '2025-04-01',
+               '2025-05-01', '2025-06-01', '2025-07-01', '2025-08-01',
+               '2025-09-01', '2025-10-01', '2025-11-01', '2025-12-01'],
+              dtype='datetime64[ns]', freq='MS')
+```
+
+#### freq = "A" (annual)
+
+```
+pd.date_range(start = "2025-01-01", end ="2030-12-31", freq ="AS")
+-------------
+DatetimeIndex(['2025-01-01', '2026-01-01', '2027-01-01', '2028-01-01',
+               '2029-01-01', '2030-01-01'],
+              dtype='datetime64[ns]', freq='YS-JAN')
+```
+#### period
+```
+pd.date_range(start = "2025-01-20",freq = "D", periods=11)
+-----------
+DatetimeIndex(['2025-01-20', '2025-01-21', '2025-01-22', '2025-01-23',
+               '2025-01-24', '2025-01-25', '2025-01-26', '2025-01-27',
+               '2025-01-28', '2025-01-29', '2025-01-30'],
+              dtype='datetime64[ns]', freq='D')
+```
+
+### 4. the dt attribute
+
+```
+selected_days = pd.Series(pd.date_range(start = "2025-01-01", end = "2025-5-30", freq="10D 12H"))
+selected_days
+-----------------
+0    2025-01-01 00:00:00
+1    2025-01-11 12:00:00
+2    2025-01-22 00:00:00
+3    2025-02-01 12:00:00
+4    2025-02-12 00:00:00
+5    2025-02-22 12:00:00
+6    2025-03-05 00:00:00
+7    2025-03-15 12:00:00
+8    2025-03-26 00:00:00
+9    2025-04-05 12:00:00
+10   2025-04-16 00:00:00
+11   2025-04-26 12:00:00
+12   2025-05-07 00:00:00
+13   2025-05-17 12:00:00
+14   2025-05-28 00:00:00
+dtype: datetime64[ns]
+
+------------------------
+# 求年、月、日、小時等等
+
+selected_days.dt.year
+
+0     2025
+1     2025
+2     2025
+3     2025
+4     2025
+5     2025
+6     2025
+7     2025
+8     2025
+9     2025
+10    2025
+11    2025
+12    2025
+13    2025
+14    2025
+dtype: int32
+-----------------------
+selected_days.dt.month
+selected_days.dt.hour
+-----------------------
+selected_days.dt.day_of_year # 一年之中第幾天
+0       1
+1      11
+2      22
+3      32
+4      43
+5      53
+6      64
+7      74
+8      85
+9      95
+10    106
+11    116
+12    127
+13    137
+14    148
+dtype: int32
+----------------------
+selected_days.dt.day_of_week #一年之中第幾週
+----------------------
+selected_days.dt.day_name()
+
+0     Wednesday
+1      Saturday
+2     Wednesday
+3      Saturday
+4     Wednesday
+5      Saturday
+6     Wednesday
+7      Saturday
+8     Wednesday
+9      Saturday
+10    Wednesday
+11     Saturday
+12    Wednesday
+13     Saturday
+14    Wednesday
+dtype: object
+----------------------
+selected_days.dt.is_month_end # boolean，是否為當月最後一天
+---------------------
+selected_days.dt.is_quarter_start
+---------------------
+0      True
+1     False
+2     False
+3     False
+4     False
+5     False
+6     False
+7     False
+8     False
+9     False
+10    False
+11    False
+12    False
+13    False
+14    False
+dtype: bool
+---------------------
+selected_days[selected_days.dt.is_quarter_start]
+--------------------
+0   2025-01-01
+dtype: datetime64[ns]
+
+```
+### 5. 指定DataFrame欄位
+
+```
+# 將日期設為index
+stocks = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/ibm.csv", index_col="Date").sort_index()
+
+stocks.iloc[300] # 第300行資料數據
+stocks.loc["2020-10-30"] # label為2020/10/30數據
+
+#以下結果相等
+stocks.loc["2020-10-30": "2020-12-31"] # 取時間區間
+stocks.loc[pd.Timestamp(2020,10,30):pd.Timestamp(2020,12,31)]
+stocks.truncate("2020-10-30","2020-12-31")
+
+# 特定日期取值
+stocks.loc["2020-10-30", "Close"] 
+----------------------
+np.float64(99.8367)
+----------------------
+stocks.loc["2020-10-30", "High":"Close"] 
+----------------------
+# High     99.9730
+# Low      96.3450
+# Close    99.8367
+# Name: 2020-10-30, dtype: float64
+```
+
+### 6. DateOffset (調整日期)
+
+- 先將日期(type:str)轉為date type (parse = [xxx])
+- 基礎：pd.DateOffset(單位=數量)
+```
+stocks = pd.read_csv(
+    "/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/ibm.csv", parse_dates=["Date"], index_col="Date").sort_index()
+
+# 針對每個日期，加減5天
+stocks.index
+
+DatetimeIndex(['1962-01-02', '1962-01-03', '1962-01-04', '1962-01-05',
+               '1962-01-08', '1962-01-09', '1962-01-10', '1962-01-11',
+               '1962-01-12', '1962-01-15',
+               ...
+               '2023-09-28', '2023-09-29', '2023-10-02', '2023-10-03',
+               '2023-10-04', '2023-10-05', '2023-10-06', '2023-10-09',
+               '2023-10-10', '2023-10-11'],
+              dtype='datetime64[ns]', name='Date', length=15546, freq=None)
+
+-------------------
+stocks.index + pd.DateOffset(days=5)
+
+['1962-01-07', '1962-01-08', '1962-01-09', '1962-01-10',
+               '1962-01-13', '1962-01-14', '1962-01-15', '1962-01-16',
+               '1962-01-17', '1962-01-20',
+               ...
+               '2023-10-03', '2023-10-04', '2023-10-07', '2023-10-08',
+               '2023-10-09', '2023-10-10', '2023-10-11', '2023-10-14',
+               '2023-10-15', '2023-10-16'],
+              dtype='datetime64[ns]', name='Date', length=15546, freq=None)
+
+--------------------------
+stocks.index - pd.DateOffset(years=5)
+stocks.index + pd.DateOffset(years=1, months=2, days = 3, hours = 9, minutes = 34, seconds = 17)
+```
+
+- find the IBM stock on every of my birthday(10/30)
+```
+my_birthday = pd.date_range(start="1992-10-30", end="2020-10-30", freq=pd.DateOffset(years=1))
+
+-----------------
+DatetimeIndex(['1992-10-30', '1993-10-30', '1994-10-30', '1995-10-30',
+               '1996-10-30', '1997-10-30', '1998-10-30', '1999-10-30',
+               '2000-10-30', '2001-10-30', '2002-10-30', '2003-10-30',
+               '2004-10-30', '2005-10-30', '2006-10-30', '2007-10-30',
+               '2008-10-30', '2009-10-30', '2010-10-30', '2011-10-30',
+               '2012-10-30', '2013-10-30', '2014-10-30', '2015-10-30',
+               '2016-10-30', '2017-10-30', '2018-10-30', '2019-10-30',
+               '2020-10-30'],
+              dtype='datetime64[ns]', freq='<DateOffset: years=1>')
+```
+
+- 取得生日期間的細項
+
+```
+stocks[stocks.index.isin(my_birthday)]
+```
+<img src="/images/24.png" width="50%">
+
+### 7. Timedeltas (調整日期)
+
+- TimeDeltas 字面上的意思就是「時間差」，它代表兩個時間點之間的固定時間長度，例如測量出「5 天」、「3 小時」或「10 分鐘」這樣的絕對時間間隔。
+- 和前面提到的DataOffset很像，但是以下為核心差異：
+    - Timedelta：代表固定的時間長度，不考慮日曆上的特殊規則（例如月末、閏年）。
+    - DateOffset：代表日曆上的時間偏移量，會考慮日曆規則。
+
+- 範例:大日期-小日期
+
+```
+pd.Timestamp("2023-10-31 21:40:39")  - pd.Timestamp("2023-10-10 12:49:02")
+---
+Timedelta('21 days 08:51:37')
+```
+
+- 範例：小日期-大日期得負數
+
+```
+pd.Timestamp("2023-10-10 12:49:02")  - pd.Timestamp("2023-10-31 21:40:39")
+---
+# Timedelta('-22 days +15:08:23')
+```
+
+- 自己創建TimeDelta
+
+```
+pd.Timedelta(days=3, hours=23, minutes=28, seconds=53)
+
+# Timedelta('3 days 23:28:53')
+-----
+pd.Timedelta("10 hours 4 minutes 1 seconds")
+# Timedelta('0 days 10:04:01')
+```
+
+- 範例
+
+```
+# 查找下單到運送日期之間所需時間。注意：parse_dates若後面不給date_format會出現error
+
+ecommerce = pd.read_csv("/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/ecommerce.csv", index_col="ID", parse_dates=["order_date","delivery_date"], date_format="%m/%d/%y")
+ecommerce.dtypes #datetime64[ns]
+
+#取得時間差並創建+指定給欄位:delivery_time
+ecommerce["delivery_time"] = ecommerce["delivery_date"] - ecommerce["order_date"]
+
+#若所需運費時間變為2倍
+ecommerce["double_delivery_time"] = ecommerce["delivery_date"] + ecommerce["delivery_time"]
+
+```
+
+## 十一、Input and Output
+
+### 1. input外部檔案
+
+```
+import pandas as pd
+import ssl
+import certifi
+from urllib.request import urlopen
+from io import StringIO
+
+def safe_read_csv(url: str, **kwargs) -> pd.DataFrame:
+    """
+    從 HTTPS 來源安全讀取 CSV，使用 certifi 的最新憑證避免 SSL 驗證失敗。
+    
+    :param url: CSV 來源 URL
+    :param kwargs: 傳遞給 pandas.read_csv 的其他參數
+    :return: pandas DataFrame
+    """
+    # 建立 SSL context，指定使用 certifi 憑證檔
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+    
+    # 先用 urllib 下載內容，再交給 pandas
+    with urlopen(url, context=ssl_context) as response:
+        csv_data = response.read().decode("utf-8")
+    
+    return pd.read_csv(StringIO(csv_data), **kwargs)
+
+# ===== 測試 =====
+url = "https://data.cityofnewyork.us/api/views/25th-nujf/rows.csv"
+baby_names = safe_read_csv(url)
+print(baby_names.head())
+
+```
+
+### 2. input Google Documents
+#### share檔案
+```
+google_doc = "https://docs.google.com/spreadsheets/d/1YTcbe2UE7ju-zMYBJcNcB9zf3gzmHsDGHxkcYdwZTaw/edit?usp=sharing"
+```
+
+#### 確認檔案ID
+```
+ID = 1YTcbe2UE7ju-zMYBJcNcB9zf3gzmHsDGHxkcYdwZTaw
+```
+
+#### edit?usp=sharing 替換成 export?format=csv
+
+```
+google_doc = "https://docs.google.com/spreadsheets/d/1YTcbe2UE7ju-zMYBJcNcB9zf3gzmHsDGHxkcYdwZTaw/export?format=csv"
+```
+
+#### try
+
+```
+url = "https://docs.google.com/spreadsheets/d/1YTcbe2UE7ju-zMYBJcNcB9zf3gzmHsDGHxkcYdwZTaw/export?format=csv"
+baby_names = safe_read_csv(url)
+print(baby_names.head())
+```
+
+### 3.Import Excel File into Pandas
+
+- 1個excel表格，1張分頁
+```
+import pandas as pd
+single_data = pd.read_excel(
+    "/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/Data - Single Worksheet.xlsx")
+
+```
+- 1張表格裡有多個分頁，預設只會讀取**第一個分頁**
+```
+multiple_data1 = pd.read_excel("/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/Data - Multiple Worksheets.xlsx", sheet_name="Data 1") # sheet_name = 0
+---
+multiple_data2 = pd.read_excel("/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/Data - Multiple Worksheets.xlsx", sheet_name="Data 2") # sheet_name = 1
+```
+- 1張表格裡同時匯入多張分頁
+```
+multiple_data12 = pd.read_excel("/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/Data - Multiple Worksheets.xlsx", sheet_name=["Data 1","Data 2"]) ## sheet_name = 0,1
+
+```
+- 1張表格裡讀取所有分頁->sheet_name = None
+    - 在 pd.read_excel() 這個函式中，當你將 sheet_name 設為 None 時，Pandas 就會把這個行為解釋為：「使用者沒有指定任何特定的工作表，所以我的預設行為是處理所有工作表。」
+```
+multiple_data12 = pd.read_excel("/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/Data - Multiple Worksheets.xlsx", sheet_name=None) ## sheet_name = 全部。
+```
+
+## 十二、Visualization視覺化
+
+### 下載
+
+- 如果直接下載，系統會為找不到版本而提示 ``zsh: command not found: pip``
+```
+python3.12 -m pip install matplotlib
+```
+
+### pyplot模組
+
+- 下載
+- matplotlib 是一個龐大的函式庫，包含許多子模組，例如 pyplot、artist、cm 等等。如果你只匯入 matplotlib，你需要用 matplotlib.pyplot.plot() 這樣冗長的寫法才能呼叫繪圖函式。
+- pyplot 模組幾乎是繪圖的首選
+
+```
+import pandas as pd
+import matplotlib.pyplot as plt
+# 整理資料，將日期string格式改為TimeStamp
+ibm = pd.read_csv("/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/ibm.csv", parse_dates=["Date"],index_col="Date").sort_index()
+ibm.head()
+```
+### 繪製圖
+
+```
+ibm.plot()
+```
+<img src="/images/25.png" width="50%">
+
+### 指定x\y軸
+```
+ibm.plot(y="Close")
+```
+<img src="/images/26.png" width="50%">
+
+### plt.style
+
+#### 折線圖
+
+- 叫出所有可以用的格式
+```
+plt.style.available
+-----
+['Solarize_Light2',
+ '_classic_test_patch',
+ '_mpl-gallery',
+ '_mpl-gallery-nogrid',
+ 'bmh',
+ 'classic',
+ 'dark_background',
+ 'fast',
+ 'fivethirtyeight',
+ 'ggplot',
+ 'grayscale',
+ 'petroff10',
+ 'seaborn-v0_8',
+ 'seaborn-v0_8-bright',
+ 'seaborn-v0_8-colorblind',
+ 'seaborn-v0_8-dark',
+ 'seaborn-v0_8-dark-palette',
+ 'seaborn-v0_8-darkgrid',
+ 'seaborn-v0_8-deep',
+ 'seaborn-v0_8-muted',
+ 'seaborn-v0_8-notebook',
+ 'seaborn-v0_8-paper',
+ 'seaborn-v0_8-pastel',
+ 'seaborn-v0_8-poster',
+ 'seaborn-v0_8-talk',
+ 'seaborn-v0_8-ticks',
+ 'seaborn-v0_8-white',
+ 'seaborn-v0_8-whitegrid',
+'tableau-colorblind10']
+```
+
+- 開始選擇格式。use()中間的個是可以根據上面style挑選變換
+
+```
+plt.style.use("seaborn-v0_8-colorblind")
+ibm.plot(y="Close")
+```
+#### bar charts
+
+- 原先的數據是散佈數據適合折線圖，現在要把它加總變成bar charts適合的數據
+
+```
+def rank_performance(stock_price):
+    if stock_price <= 50:
+        return "Poor"
+    elif stock_price > 50 and stock_price <= 100:
+        return "Average"
+    else:
+        return "Excellent"
+
+ibm["Close"].apply(rank_performance)
+-----------
+Date
+1962-01-02         Poor
+1962-01-03         Poor
+1962-01-04         Poor
+1962-01-05         Poor
+1962-01-08         Poor
+                ...    
+2023-10-05    Excellent
+2023-10-06    Excellent
+2023-10-09    Excellent
+2023-10-10    Excellent
+2023-10-11    Excellent
+Name: Close, Length: 15546, dtype: object
+
+```
+- 分類完成，計算
+
+```
+ibm["Close"].apply(rank_performance).value_counts() 
+----
+Close
+Poor         9423
+Excellent    3085
+Average      3038
+Name: count, dtype: int64
+```
+
+```
+ibm["Close"].apply(rank_performance).value_counts().plot(kind = "bar")
+```
+<img src="/images/27.png" width="50%">
+
+```
+ibm["Close"].apply(rank_performance).value_counts().plot(kind = "barh") #horizontal
+```
+<img src="/images/28.png" width="50%">
+
+#### pie charts:算比例
+
+- 計算多少比例的股價在平均之上，多少在平均之下
+
+<img src="/images/21.png" width="50%">
+
+```
+import pandas as pd
+import matplotlib.pyplot as plt
+ibm = pd.read_csv("/Users/tinafung8686/Desktop/python vscode/pandas/Incomplete/ibm.csv", parse_dates=["Date"],index_col="Date").sort_index()
+
+average_stock_price = ibm["Close"].mean()
+def average_stock(stock_price):
+    if stock_price <= average_stock_price:
+        return "Below Average"
+    else:
+        return "Above Average"
+    
+plot_data = ibm["Close"].apply(average_stock).value_counts().plot(kind="pie", legend=True) #legend圖例
+```
+- 進階(調整字體、顏色、細節) (之後補)
+
+## Options and Settings
+
+- np
+```
+import pandas as pd
+import numpy as np
+
+# np隨便產出一個整數，介於0-100
+np.random.randint(0,100)
+
+# np隨便產出一個整數，介於0-100,欄位大小為20*30
+np.random.randint(0,100,[20,30])
+
+type(np.random.randint(0,100,[20,30])) 
+#numpy.ndarray
+```
+
+### pd.options
+
+- np指定為DataFrame
+- 60*50，欄處在9...40，列則會全部顯示
+- 61*50，欄處在9...40，列則會是4...56，這和pd.options設定有關
+
+```
+pd.DataFrame(np.random.randint(0,100,[60,50]))
+pd.DataFrame(np.random.randint(0,100,[61,50]))
+
+```
